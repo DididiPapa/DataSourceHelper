@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.crudman.datasourcehelper.controller.MainController"
+            stylesheets="@style.css">
+
+    <top>
+        <!-- ========== 数据库连接面板 ========== -->
+        <VBox styleClass="connection-panel" spacing="6.0">
+            <padding>
+                <Insets top="10.0" right="16.0" bottom="10.0" left="16.0"/>
+            </padding>
+
+            <Label text="数据库连接配置" styleClass="section-title"/>
+
+            <!-- 已保存的连接配置 -->
+            <HBox spacing="8.0" alignment="CENTER_LEFT">
+                <Label text="已保存配置:"/>
+                <ComboBox fx:id="savedConnCombo" promptText="选择已保存的连接..."
+                          prefWidth="260" onAction="#onSavedConnectionSelected"/>
+                <Button fx:id="saveConnBtn" text="💾 保存当前配置" styleClass="btn-secondary"
+                        onAction="#onSaveConnection" prefWidth="140"/>
+                <Button fx:id="deleteConnBtn" text="🗑 删除" styleClass="btn-secondary"
+                        onAction="#onDeleteConnection" prefWidth="80" disable="true"/>
+            </HBox>
+
+            <!-- 第一行: 数据库类型 | 主机地址 -->
+            <HBox spacing="10.0" alignment="CENTER_LEFT">
+                <VBox spacing="2.0">
+                    <Label text="数据库类型"/>
+                    <ComboBox fx:id="dbTypeCombo" prefWidth="200" promptText="请选择数据库类型"/>
+                </VBox>
+                <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                    <Label text="主机地址"/>
+                    <TextField fx:id="hostField" text="localhost" prefWidth="200" promptText="localhost"/>
+                </VBox>
+            </HBox>
+
+            <!-- 第二行: 端口 | 用户名 -->
+            <HBox spacing="10.0" alignment="CENTER_LEFT">
+                <VBox spacing="2.0">
+                    <Label text="端口"/>
+                    <TextField fx:id="portField" text="3306" prefWidth="200" promptText="3306"/>
+                </VBox>
+                <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                    <Label text="用户名"/>
+                    <TextField fx:id="usernameField" text="root" prefWidth="200" promptText="用户名"/>
+                </VBox>
+            </HBox>
+
+            <!-- 第三行: 密码 | 按钮区域 -->
+            <HBox spacing="10.0" alignment="CENTER_LEFT">
+                <VBox spacing="2.0">
+                    <Label text="密码"/>
+                    <PasswordField fx:id="passwordField" prefWidth="200" promptText="密码"/>
+                </VBox>
+                <HBox spacing="10.0" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                    <padding><Insets top="16.0"/></padding>
+                    <Button fx:id="testConnBtn" text="🔍 测试连接" styleClass="btn-secondary"
+                            onAction="#onTestConnection" prefWidth="120"/>
+                    <Button fx:id="connectBtn" text="🔗 连接" styleClass="btn-primary"
+                            onAction="#onConnect" prefWidth="90"/>
+                    <Button fx:id="disconnectBtn" text="断开" styleClass="btn-secondary"
+                            onAction="#onDisconnect" disable="true" prefWidth="70"/>
+                    <Label fx:id="connStatusLabel" text="未连接" styleClass="status-label"/>
+                </HBox>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <!-- ========== 中间：表选择 + 列预览 ========== -->
+        <SplitPane dividerPositions="0.4" styleClass="main-split">
+            <items>
+                <!-- 左侧：表列表 -->
+                <VBox spacing="6.0" styleClass="table-list-panel">
+                    <padding>
+                        <Insets top="10.0" right="12.0" bottom="10.0" left="12.0"/>
+                    </padding>
+
+                    <Label text="数据库表" styleClass="section-title"/>
+
+                    <!-- 数据库选择 -->
+                    <HBox spacing="6.0" alignment="CENTER_LEFT">
+                        <Label text="数据库:"/>
+                        <ComboBox fx:id="databaseCombo" promptText="连接后可选择数据库"
+                                  prefWidth="300" onAction="#onDatabaseSelected"/>
+                    </HBox>
+
+                    <!-- 搜索框 -->
+                    <TextField fx:id="tableSearchField" promptText="搜索表名..."/>
+
+                    <CheckBox fx:id="selectAllCheck" text="全选 / 取消全选" onAction="#onSelectAll"/>
+                    <Label fx:id="tableCountLabel" text="共 0 张表，已选 0 张" styleClass="status-label"/>
+
+                    <ListView fx:id="tableView" VBox.vgrow="ALWAYS" styleClass="table-list-view"/>
+                </VBox>
+
+                <!-- 右侧：列信息预览 -->
+                <VBox spacing="6.0" styleClass="column-preview-panel">
+                    <padding>
+                        <Insets top="10.0" right="12.0" bottom="10.0" left="12.0"/>
+                    </padding>
+
+                    <Label text="列信息预览" styleClass="section-title"/>
+                    <Label fx:id="selectedTableLabel" text="请选择一张表查看列信息" styleClass="status-label"/>
+
+                    <TableView fx:id="columnTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colNameCol" text="列名" prefWidth="140"/>
+                            <TableColumn fx:id="colTypeCol" text="数据库类型" prefWidth="100"/>
+                            <TableColumn fx:id="colJavaTypeCol" text="Java类型" prefWidth="100"/>
+                            <TableColumn fx:id="colSizeCol" text="长度" prefWidth="60"/>
+                            <TableColumn fx:id="colPkCol" text="主键" prefWidth="60"/>
+                            <TableColumn fx:id="colAutoCol" text="自增" prefWidth="60"/>
+                            <TableColumn fx:id="colNullableCol" text="可空" prefWidth="60"/>
+                            <TableColumn fx:id="colRemarkCol" text="注释" prefWidth="200"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </items>
+        </SplitPane>
+    </center>
+
+    <bottom>
+        <!-- ========== 底部：配置与生成 ========== -->
+        <VBox spacing="6.0" styleClass="generate-panel">
+            <padding>
+                <Insets top="10.0" right="16.0" bottom="10.0" left="16.0"/>
+            </padding>
+
+            <Label text="代码生成配置" styleClass="section-title"/>
+
+            <HBox spacing="10.0" alignment="CENTER_LEFT">
+                <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                    <Label text="基础包名"/>
+                    <TextField fx:id="basePackageField" text="com.example" promptText="com.example" prefWidth="200"/>
+                </VBox>
+
+                <VBox spacing="2.0">
+                    <Label text="输出目录"/>
+                    <HBox spacing="6.0">
+                        <TextField fx:id="outputDirField" promptText="选择输出目录..." prefWidth="320"/>
+                        <Button fx:id="browseDirBtn" text="📁 浏览" onAction="#onBrowseOutputDir" prefWidth="80"/>
+                    </HBox>
+                </VBox>
+
+                <VBox spacing="2.0">
+                    <Label text="作者"/>
+                    <TextField fx:id="authorField" promptText="作者名" prefWidth="120"/>
+                </VBox>
+
+                <VBox spacing="2.0">
+                    <Label text="表前缀(去除)"/>
+                    <TextField fx:id="tablePrefixField" promptText="如: t_" prefWidth="100"/>
+                </VBox>
+
+                <VBox spacing="4.0" alignment="BOTTOM_CENTER">
+                    <CheckBox fx:id="useLombokCheck" text="Lombok" selected="true"/>
+                    <Button fx:id="generateBtn" text="🚀 生成代码" styleClass="btn-generate"
+                            onAction="#onGenerate" prefWidth="120" prefHeight="36"/>
+                </VBox>
+            </HBox>
+
+            <!-- 生成日志 -->
+            <TextArea fx:id="logArea" promptText="操作日志将显示在这里..." editable="false"
+                      VBox.vgrow="SOMETIMES" prefRowCount="6"/>
+        </VBox>
+    </bottom>
+
+</BorderPane>
