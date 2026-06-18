@@ -55,6 +55,58 @@ jlink {
     imageZip.set(layout.buildDirectory.file("/distributions/app-${javafx.platform.classifier}.zip"))
     options.set(listOf("--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages"))
     launcher {
-        name = "app"
+        name = "DataSourceHelper"
     }
+}
+
+// ========== 打包成 exe（Windows） ==========
+val jpackageDir = layout.buildDirectory.dir("jpackage")
+
+tasks.register<Exec>("createExe") {
+    group = "distribution"
+    description = "打包成 .exe 安装程序"
+    dependsOn("jar")
+
+    // 准备 jars 目录
+    val jarsDir = layout.buildDirectory.dir("jars")
+
+    // 删除旧打包结果 + 复制所有 jar + 准备图标
+    doFirst {
+        // 删除旧输出
+        val target = File(jpackageDir.get().asFile, "DataSourceHelper")
+        if (target.exists()) target.deleteRecursively()
+        // 复制 jars
+        val dest = jarsDir.get().asFile
+        dest.mkdirs()
+        tasks.jar.get().archiveFile.get().asFile.copyTo(
+            File(dest, tasks.jar.get().archiveFileName.get()), true)
+        configurations.runtimeClasspath.get().forEach { f ->
+            f.copyTo(File(dest, f.name), true)
+        }
+        // 复制 ico 到 jars 目录（app-image 模式图标放在 input 目录中）
+        val iconSrc = File("${projectDir}/src/main/resources/com/crudman/datasourcehelper/favicon.ico")
+        if (iconSrc.exists()) {
+            iconSrc.copyTo(File(dest, "DataSourceHelper.ico"), true)
+        }
+    }
+
+    val jdkHome = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(21)
+    }.get().metadata.installationPath.asFile.absolutePath
+
+    workingDir = jpackageDir.get().asFile
+
+    commandLine(
+        "$jdkHome/bin/jpackage",
+        "--type", "app-image",
+        "--name", "DataSourceHelper",
+        "--app-version", "1.0",
+        "--vendor", "crudman",
+        "--description", "数据库代码生成器",
+        "--input", jarsDir.get().asFile.absolutePath,
+        "--main-jar", tasks.jar.get().archiveFileName.get(),
+        "--main-class", "com.crudman.datasourcehelper.Launcher",
+        "--dest", jpackageDir.get().asFile.absolutePath,
+        "--icon", jarsDir.get().asFile.absolutePath + "/DataSourceHelper.ico"
+    )
 }
